@@ -1,4 +1,3 @@
-const xss = require("xss");
 const _ = require('lodash');
 
 const contentCategoryRule = (ctx) => {
@@ -70,7 +69,7 @@ let ContentCategoryController = {
                 parentId: fields.parentId,
                 enable: fields.enable,
                 defaultUrl: fields.defaultUrl,
-                contentTemp: fields.contentTemp,
+                content_temp: fields.content_temp,
                 comments: fields.comments,
                 sImg: fields.sImg,
                 cate_type: fields.cate_type
@@ -90,7 +89,7 @@ let ContentCategoryController = {
                     }
                 })
                 if (!_.isEmpty(parentCate)) {
-                    formObj.contentTemp = parentCate.contentTemp;
+                    formObj.content_temp = parentCate.content_temp;
                 }
             }
 
@@ -167,7 +166,7 @@ let ContentCategoryController = {
                 parentId: fields.parentId,
                 enable: fields.enable,
                 defaultUrl: fields.defaultUrl,
-                contentTemp: fields.contentTemp,
+                content_temp: fields.content_temp,
                 sortPath: fields.sortPath,
                 comments: fields.comments,
                 sImg: fields.sImg,
@@ -175,9 +174,9 @@ let ContentCategoryController = {
             }
 
             // 针对子类自动继承父类的模板
-            if (fields.parentId == '0' && fields.contentTemp) {
+            if (fields.parentId == '0' && fields.content_temp) {
                 await ctx.service.contentCategory.updateMany('', {
-                    contentTemp: fields.contentTemp
+                    content_temp: fields.content_temp
                 }, {
                     'parentId': fields.id
                 })
@@ -204,17 +203,18 @@ let ContentCategoryController = {
 
         try {
             let targetIds = ctx.query.ids;
-            let contentCountInCates = await ctx.service.content.count({
-                categories: targetIds
+            let contentCountInCates = await ctx.service.contentAndCategory.count({
+                category_id: targetIds
             })
 
             if (contentCountInCates > 0) {
                 throw new Error("请先删除该分类下的文章！");
             } else {
-                // 删除主分类
-                await ctx.service.contentCategory.removes(targetIds);
                 // 删除子类
                 await ctx.service.contentCategory.removes(targetIds, 'parentId');
+                // 删除主分类
+                await ctx.service.contentCategory.removes(targetIds);
+
                 await app.getRoutes(ctx, 'update');
                 ctx.helper.renderSuccess(ctx);
             }
